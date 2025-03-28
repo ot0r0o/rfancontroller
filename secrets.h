@@ -1,0 +1,15 @@
+#ifndef SECRETS_H
+#define SECRETS_H
+
+#define WIFI_SSID "YOUR_SSID"
+#define WIFI_PASS "PASS"
+
+#define MQTT_SERVER "x.x.x.x"
+#define MQTT_PORT 1883
+#define MQTT_DEVID "DEVICE_ID"
+#define MQTT_USER "YOUR_USER_GOES_HERE"
+#define MQTT_PASS "YOUR_PASS_GOES_HERE"
+#define MQTT_TOPIC "YOUR_TOPIC_GOES_HERE"
+
+#endif  // SECRETS_H
+
