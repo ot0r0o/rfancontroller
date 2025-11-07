@@ -28,3 +28,6 @@ Standard RF libraries like RCSwitch were **not fully compatible** with my ceilin
 
 ## Raw signals
 The captured raw signals aren't uploaded to the repository for security reassons. You just need to capture each remote command and modify the `RFanController.h` to add your commands.
+
+## Alternative using ESPHome
+You can use the ESPHome version with the [fan-controller.yaml](https://github.com/ot0r0o/rfancontroller/blob/main/fan-controller.yaml) file. With this solution we can reach the same functionallity but 100% integrated in Home Assistant without the need of a MQTT broker, just ESPHome. More information [here](https://esphome.io/components/remote_transmitter/)
