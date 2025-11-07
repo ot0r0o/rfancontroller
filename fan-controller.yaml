@@ -1,0 +1,333 @@
+# This is the configuration file to control an ESP device with ESPHome. In this case I'm using a ESP32C6 from Seeed Xiao
+esphome:
+  name: "fan-controller"
+  friendly_name: Fan controller
+  platformio_options:
+    platform: https://github.com/lucaskatayama/platform-espressif32.git#feat/seeed_xiao_esp32c6.json
+  on_boot:
+    priority: 375
+    then:
+      - lambda: |-
+          id(init) = true;
+          id(wifi_antenna_func).turn_off();
+          delay(100);
+          id(wifi_ext_antenna).turn_on();
+
+esp32:
+  board: seeed_xiao_esp32c6
+  variant: ESP32C6
+  framework:
+    type: esp-idf
+    version: 5.3.0
+    platform_version: 6.9.0
+    sdkconfig_options:
+      CONFIG_ESPTOOLPY_FLASHSIZE_4MB: y
+
+wifi:
+  id: wifi_id
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  output_power: 20
+  fast_connect: true
+  manual_ip:
+   static_ip: "192.168.1.14"
+   gateway: "192.168.1.1"
+   subnet: "255.255.255.0"
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "***"
+
+ota:
+  - platform: esphome
+    password: "***"
+
+output:
+  - platform: gpio
+    pin: 3
+    id: wifi_antenna_func
+  - platform: gpio
+    pin: 14
+    id: wifi_ext_antenna
+
+remote_transmitter:
+  pin: 1
+  carrier_duty_percent: 100%
+
+globals:
+  - id: fan_onoff
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: light_onoff
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: fan_fr
+    type: bool
+    restore_value: no
+    initial_value: "false"
+  - id: init
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+switch:
+  - platform: template
+    name: "Ventilador ON/OFF"
+    lambda: |-
+      return id(fan_onoff);
+    turn_on_action:
+      - script.execute: switch_fan_onoff
+    turn_off_action:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(fan_onoff);'
+            then:
+              - script.execute: switch_fan_onoff
+    id: fan_onoff_switch
+    icon: mdi:fan
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    name: "Luz ON/OFF"
+    lambda: |-
+      return id(light_onoff);
+    turn_on_action:
+      - script.execute: switch_light_onoff
+    turn_off_action:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(light_onoff);'
+            then:
+              - script.execute: switch_light_onoff
+    id: fan_light_switch
+    icon: mdi:ceiling-fan-light
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    name: "Cambio dirección"
+    lambda: |-
+      return id(fan_fr);
+    turn_on_action:
+      - script.execute: switch_fan_fr
+    turn_off_action:
+      - script.execute: switch_fan_fr
+    id: fan_fr_switch
+    icon: mdi:arrow-oscillating
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
+button:
+  - platform: restart
+    name: "Restart"
+    icon: mdi:restart
+  - platform: template
+    id: reset_button
+    name: "Reset"
+    icon: mdi:undo-variant
+    on_press: 
+      then:
+        - lambda: |-
+            id(fan_onoff) = false;
+            id(light_onoff) = false;
+            id(fan_fr) = false;     
+  - platform: template
+    id: speed_1_button
+    name: "Velocidad 1"
+    icon: mdi:fan-speed-1
+    on_press:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - lambda: |-
+                  id(fan_onoff) = true;
+  - platform: template
+    id: speed_2_button
+    name: "Velocidad 2"
+    icon: mdi:fan-speed-2
+    on_press:
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - lambda: |-
+                  id(fan_onoff) = true;
+  - platform: template
+    id: speed_3_button
+    name: "Velocidad 3"
+    icon: mdi:fan-speed-3
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - lambda: |-
+                  id(fan_onoff) = true;
+  - platform: template
+    id: speed_4_button
+    name: "Velocidad 4"
+    icon: mdi:fan-plus
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - lambda: |-
+                  id(fan_onoff) = true;
+  - platform: template
+    id: speed_5_button
+    name: "Velocidad 5"
+    icon: mdi:fan-chevron-up
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - lambda: |-
+                  id(fan_onoff) = true;
+  - platform: template
+    id: timer_1_button
+    name: "Temporizador 1h"
+    icon: mdi:fan-clock
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - script.execute: timer_1h
+  - platform: template
+    id: timer_4_button
+    name: "Temporizador 4h"
+    icon: mdi:fan-clock
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - script.execute: timer_4h
+  - platform: template
+    id: timer_8_button
+    name: "Temporizador 8h"
+    icon: mdi:fan-clock
+    on_press: 
+      then:
+        - if:
+            condition:
+              lambda: 'return id(init);'
+            then:
+              - remote_transmitter.transmit_raw:
+                  code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                  repeat: { times: 5, wait_time: 0ms }
+                  carrier_frequency: 433MHz
+              - script.execute: timer_8h
+
+script:
+  - id: switch_fan_onoff
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(init);'
+          then:
+            - remote_transmitter.transmit_raw:
+                code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                repeat: { times: 5, wait_time: 0ms }
+                carrier_frequency: 433MHz
+            - lambda: |-
+                id(fan_onoff) = !id(fan_onoff);
+  - id: switch_light_onoff
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(init);'
+          then:
+            - remote_transmitter.transmit_raw:
+                code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                repeat: { times: 5, wait_time: 0ms }
+                carrier_frequency: 433MHz
+            - lambda: |-
+                id(light_onoff) = !id(light_onoff);
+  - id: switch_fan_fr
+    mode: restart
+    then:
+      - if:
+          condition:
+            lambda: 'return id(init);'
+          then:
+            - remote_transmitter.transmit_raw:
+                code: [... YOUR CODE GOES HERE. ADD - SIGN TO LOW VALUES ... EX: 302, -911, 906, -306]
+                repeat: { times: 5, wait_time: 0ms }
+                carrier_frequency: 433MHz
+            - lambda: |-
+                id(fan_fr) = !id(fan_fr);
+                id(fan_onoff) = true;
+  - id: timer_1h
+    mode: restart
+    then:
+      - delay: 3600s
+      - globals.set:
+          id: fan_onoff
+          value: "false"
+  - id: timer_4h
+    mode: restart
+    then:
+      - delay: 14400s
+      - globals.set:
+          id: fan_onoff
+          value: "false"
+  - id: timer_8h
+    mode: restart
+    then:
+      - delay: 28800s
+      - globals.set:
+          id: fan_onoff
+          value: "false"
+
+sensor:
+  - platform: internal_temperature
+    name: "ESP32"
+    update_interval: 60s
